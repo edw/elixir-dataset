@@ -14,7 +14,7 @@ dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:dataset, "~> 0.4.0"}
+    {:dataset, "~> 0.5.0"}
   ]
 end
 ```

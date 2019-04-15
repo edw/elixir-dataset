@@ -379,6 +379,45 @@ defmodule Dataset do
     |> Dataset.new(List.to_tuple(out_labels))
   end
 
+  @doc ~S"""
+
+  Return a tuple of lists containing columnar data from `ds`, one list
+  for each passed element of the `column_labels` list. Lists are
+  returned in the tuple in the same order in which they appear in
+  `column_labels`. Labels may appear more than once.
+
+      iex> iso_countries = %Dataset{
+      ...>   labels: {:iso_country, :country_name},
+      ...>   rows: [
+      ...>     {"us", "United States"},
+      ...>     {"uk", "United Kingdom"},
+      ...>     {"ca", "Canada"},
+      ...>     {"de", "Germany"},
+      ...>     {"nl", "Netherlands"},
+      ...>     {"sg", "Singapore"}
+      ...>   ]
+      ...> }
+      ...>  Dataset.columns(iso_countries, [:iso_country, :iso_country])
+      {["us", "uk", "ca", "de", "nl", "sg"],
+       ["us", "uk", "ca", "de", "nl", "sg"]}
+
+  """
+
+  def columns(_ds = %Dataset{}, []), do: {}
+  def columns(ds = %Dataset{}, column_labels)
+      when is_list(column_labels) do
+    rotated = Enum.to_list(Dataset.rotate(ds)) |> List.to_tuple()
+
+    column_set =
+      for l <- column_labels do
+        label_index(List.to_tuple(column_labels), l)
+      end
+
+    for c <- column_set do
+      Tuple.to_list(elem(rotated, c))
+    end |> List.to_tuple()
+  end
+
   defp perform_join(
          join_func,
          %Dataset{rows: rows1, labels: labels1},
