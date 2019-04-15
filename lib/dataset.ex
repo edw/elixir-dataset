@@ -3,7 +3,9 @@ defmodule Dataset do
 
   @moduledoc ~S"""
 
-  Datasets represent labeled tabular data.   Datasets are enumerable:
+  Datasets represent labeled tabular data.
+
+  Datasets are enumerable:
 
       iex> Dataset.new([{:a, :b, :c},
       ...>              {:A, :B, :C},
@@ -91,6 +93,10 @@ defmodule Dataset do
 
   @doc ~S"""
 
+  Returns a dataset with each value in row _i_ and column _j_
+  transposed into row _j_ and column _i_. The dataset is labelled with
+  integer indicies beginning with zero.
+
       iex> Dataset.new([{:a,:b,:c},
       ...>              {:A, :B, :C},
       ...>              {:i, :ii, :iii},
@@ -111,7 +117,7 @@ defmodule Dataset do
     |> Dataset.new()
   end
 
-  @doc """
+  @doc ~S"""
 
   Return the result of performing an inner join on datasets `ds1` and
   `ds2`, using `k1` and `k2` as the key labels on each respective
@@ -119,40 +125,39 @@ defmodule Dataset do
   specified in `out_labels`, which is a keyword list of the form
   `[left_or_right: label, ...]`.
 
-    iex> iso_countries =
-    ...>   Dataset.new(
-    ...>     [
-    ...>       {"us", "United States"},
-    ...>       {"uk", "United Kingdom"},
-    ...>       {"ca", "Canada"},
-    ...>       {"de", "Germany"},
-    ...>       {"nl", "Netherlands"},
-    ...>       {"sg", "Singapore"}
-    ...>     ],
-    ...>     {:iso_country, :country_name}
-    ...>   )
-    ...>
-    ...> country_clicks =
-    ...>   Dataset.new(
-    ...>     [
-    ...>       {"United States", "13"},
-    ...>       {"United Kingdom", "11"},
-    ...>       {"Canada", "4"},
-    ...>       {"Germany", "4"},
-    ...>       {"France", "2"}
-    ...>     ],
-    ...>     {:country_name, :clicks}
-    ...>   )
-    ...>
-    ...> Dataset.inner_join(country_clicks, iso_countries, :country_name,
-    ...>   right: :iso_country,
-    ...>   left: :clicks
-    ...> )
-    %Dataset{
-      labels: {:iso_country, :clicks},
-      rows: [{"ca", "4"}, {"de", "4"}, {"uk", "11"}, {"us", "13"}]
-    }
-
+      iex> iso_countries =
+      ...>   Dataset.new(
+      ...>     [
+      ...>       {"us", "United States"},
+      ...>       {"uk", "United Kingdom"},
+      ...>       {"ca", "Canada"},
+      ...>       {"de", "Germany"},
+      ...>       {"nl", "Netherlands"},
+      ...>       {"sg", "Singapore"}
+      ...>     ],
+      ...>     {:iso_country, :country_name}
+      ...>   )
+      ...>
+      ...> country_clicks =
+      ...>   Dataset.new(
+      ...>     [
+      ...>       {"United States", "13"},
+      ...>       {"United Kingdom", "11"},
+      ...>       {"Canada", "4"},
+      ...>       {"Germany", "4"},
+      ...>       {"France", "2"}
+      ...>     ],
+      ...>     {:country_name, :clicks}
+      ...>   )
+      ...>
+      ...> Dataset.inner_join(country_clicks, iso_countries, :country_name,
+      ...>   right: :iso_country,
+      ...>   left: :clicks
+      ...> )
+      %Dataset{
+        labels: {:iso_country, :clicks},
+        rows: [{"ca", "4"}, {"de", "4"}, {"uk", "11"}, {"us", "13"}]
+      }
 
   """
 
@@ -167,7 +172,7 @@ defmodule Dataset do
         out_labels
       )
 
-  @doc """
+  @doc ~S"""
 
   Return the result of performing an outer join on datasets `ds1` and
   `ds2`, using `k1` and `k2` as the key labels on each respective
@@ -230,7 +235,7 @@ defmodule Dataset do
         out_labels
       )
 
-  @doc """
+  @doc ~S"""
 
   Return the result of performing a left join on datasets `ds1` and
   `ds2`, using `k1` and `k2` as the key labels on each respective
@@ -285,7 +290,7 @@ defmodule Dataset do
         out_labels
       )
 
-  @doc """
+  @doc ~S"""
 
   Return the result of performing a right join on datasets `ds1` and
   `ds2`, using `k1` and `k2` as the key labels on each respective
