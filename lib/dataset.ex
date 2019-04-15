@@ -53,6 +53,14 @@ defmodule Dataset do
     %Dataset{rows: rows, labels: labels}
   end
 
+  @doc """
+
+  Return a dataset with no rows and labels specified by the tuple
+  passed as `label`. If label is not specified, return an empty
+  dataset with zero columns.
+
+  """
+
   def empty(labels \\ nil) do
     new([], labels)
   end
@@ -62,6 +70,12 @@ defmodule Dataset do
   defp default_labels([h | _t]) do
     0..(tuple_size(h) - 1) |> Enum.to_list() |> List.to_tuple()
   end
+
+  @doc """
+
+  Return the contents of `_ds` as a list of maps.
+
+  """
 
   def to_map_list(_ds = %Dataset{rows: rows, labels: labels}) do
     for row <- rows do
@@ -96,6 +110,303 @@ defmodule Dataset do
     end
     |> Dataset.new()
   end
+
+  @doc """
+
+  Return the result of performing an inner join on datasets `ds1` and
+  `ds2`, using `k1` and `k2` as the key labels on each respective
+  dataset. The returned dataset will contain columns for each label
+  specified in `out_labels`, which is a keyword list of the form
+  `[left_or_right: label, ...]`.
+
+    iex> iso_countries =
+    ...>   Dataset.new(
+    ...>     [
+    ...>       {"us", "United States"},
+    ...>       {"uk", "United Kingdom"},
+    ...>       {"ca", "Canada"},
+    ...>       {"de", "Germany"},
+    ...>       {"nl", "Netherlands"},
+    ...>       {"sg", "Singapore"}
+    ...>     ],
+    ...>     {:iso_country, :country_name}
+    ...>   )
+    ...>
+    ...> country_clicks =
+    ...>   Dataset.new(
+    ...>     [
+    ...>       {"United States", "13"},
+    ...>       {"United Kingdom", "11"},
+    ...>       {"Canada", "4"},
+    ...>       {"Germany", "4"},
+    ...>       {"France", "2"}
+    ...>     ],
+    ...>     {:country_name, :clicks}
+    ...>   )
+    ...>
+    ...> Dataset.inner_join(country_clicks, iso_countries, :country_name,
+    ...>   right: :iso_country,
+    ...>   left: :clicks
+    ...> )
+    %Dataset{
+      labels: {:iso_country, :clicks},
+      rows: [{"ca", "4"}, {"de", "4"}, {"uk", "11"}, {"us", "13"}]
+    }
+
+
+  """
+
+  def inner_join(ds1, ds2, k1, k2 \\ nil, out_labels),
+    do:
+      perform_join(
+        &Relate.inner_join/4,
+        ds1,
+        ds2,
+        k1,
+        k2,
+        out_labels
+      )
+
+  @doc """
+
+  Return the result of performing an outer join on datasets `ds1` and
+  `ds2`, using `k1` and `k2` as the key labels on each respective
+  dataset. The returned dataset will contain columns for each label
+  specified in `out_labels`, which is a keyword list of the form
+  `[left_or_right: label, ...]`.
+
+      iex> iso_countries =
+      ...>   Dataset.new(
+      ...>     [
+      ...>       {"us", "United States"},
+      ...>       {"uk", "United Kingdom"},
+      ...>       {"ca", "Canada"},
+      ...>       {"de", "Germany"},
+      ...>       {"nl", "Netherlands"},
+      ...>       {"sg", "Singapore"}
+      ...>     ],
+      ...>     {:iso_country, :country_name}
+      ...>   )
+      ...>
+      ...> country_clicks =
+      ...>   Dataset.new(
+      ...>     [
+      ...>       {"United States", "13"},
+      ...>       {"United Kingdom", "11"},
+      ...>       {"Canada", "4"},
+      ...>       {"Germany", "4"},
+      ...>       {"France", "2"}
+      ...>     ],
+      ...>     {:country_name, :clicks}
+      ...>   )
+      ...>
+      ...>  Dataset.outer_join(country_clicks, iso_countries, :country_name,
+      ...>    right: :iso_country,
+      ...>    left: :clicks
+      ...>  )
+      %Dataset{
+        labels: {:iso_country, :clicks},
+        rows: [
+          {"ca", "4"},
+          {nil, "2"},
+          {"de", "4"},
+          {"nl", nil},
+          {"sg", nil},
+          {"uk", "11"},
+          {"us", "13"}
+        ]
+      }
+
+  """
+
+  def outer_join(ds1, ds2, k1, k2 \\ nil, out_labels),
+    do:
+      perform_join(
+        &Relate.outer_join/4,
+        ds1,
+        ds2,
+        k1,
+        k2,
+        out_labels
+      )
+
+  @doc """
+
+  Return the result of performing a left join on datasets `ds1` and
+  `ds2`, using `k1` and `k2` as the key labels on each respective
+  dataset. The returned dataset will contain columns for each label
+  specified in `out_labels`, which is a keyword list of the form
+  `[left_or_right: label, ...]`.
+
+      iex> iso_countries =
+      ...>   Dataset.new(
+      ...>     [
+      ...>       {"us", "United States"},
+      ...>       {"uk", "United Kingdom"},
+      ...>       {"ca", "Canada"},
+      ...>       {"de", "Germany"},
+      ...>       {"nl", "Netherlands"},
+      ...>       {"sg", "Singapore"}
+      ...>     ],
+      ...>     {:iso_country, :country_name}
+      ...>   )
+      ...>
+      ...> country_clicks =
+      ...>   Dataset.new(
+      ...>     [
+      ...>       {"United States", "13"},
+      ...>       {"United Kingdom", "11"},
+      ...>       {"Canada", "4"},
+      ...>       {"Germany", "4"},
+      ...>       {"France", "2"}
+      ...>     ],
+      ...>     {:country_name, :clicks}
+      ...>   )
+      ...>
+      ...>  Dataset.left_join(country_clicks, iso_countries, :country_name,
+      ...>    right: :iso_country,
+      ...>    left: :clicks
+      ...>  )
+      %Dataset{
+        labels: {:iso_country, :clicks},
+        rows: [{"ca", "4"}, {nil, "2"}, {"de", "4"}, {"uk", "11"}, {"us", "13"}]
+      }
+
+  """
+
+  def left_join(ds1, ds2, k1, k2 \\ nil, out_labels),
+    do:
+      perform_join(
+        &Relate.left_join/4,
+        ds1,
+        ds2,
+        k1,
+        k2,
+        out_labels
+      )
+
+  @doc """
+
+  Return the result of performing a right join on datasets `ds1` and
+  `ds2`, using `k1` and `k2` as the key labels on each respective
+  dataset. The returned dataset will contain columns for each label
+  specified in `out_labels`, which is a keyword list of the form
+  `[left_or_right: label, ...]`.
+
+      iex> iso_countries =
+      ...>   Dataset.new(
+      ...>     [
+      ...>       {"us", "United States"},
+      ...>       {"uk", "United Kingdom"},
+      ...>       {"ca", "Canada"},
+      ...>       {"de", "Germany"},
+      ...>       {"nl", "Netherlands"},
+      ...>       {"sg", "Singapore"}
+      ...>     ],
+      ...>     {:iso_country, :country_name}
+      ...>   )
+      ...>
+      ...> country_clicks =
+      ...>   Dataset.new(
+      ...>     [
+      ...>       {"United States", "13"},
+      ...>       {"United Kingdom", "11"},
+      ...>       {"Canada", "4"},
+      ...>       {"Germany", "4"},
+      ...>       {"France", "2"}
+      ...>     ],
+      ...>     {:country_name, :clicks}
+      ...>   )
+      ...>
+      ...>  Dataset.right_join(country_clicks, iso_countries, :country_name,
+      ...>    right: :iso_country,
+      ...>    left: :clicks
+      ...>  )
+      %Dataset{
+        labels: {:iso_country, :clicks},
+        rows: [
+          {"ca", "4"},
+          {"de", "4"},
+          {"nl", nil},
+          {"sg", nil},
+          {"uk", "11"},
+          {"us", "13"}
+        ]
+      }
+
+  """
+
+  def right_join(ds1, ds2, k1, k2 \\ nil, out_labels),
+    do:
+      perform_join(
+        &Relate.right_join/4,
+        ds1,
+        ds2,
+        k1,
+        k2,
+        out_labels
+      )
+
+  @doc ~S"""
+
+  Return a new dataset with columns chosen from the input dataset `ds`.
+
+      iex> Dataset.new([{:a,:b,:c},
+      ...>              {:A, :B, :C},
+      ...>              {:i, :ii, :iii},
+      ...>              {:I, :II, :III}],
+      ...>             {"first", "second", "third"})
+      ...> |> Dataset.select(["second"])
+      %Dataset{rows: [{:b}, {:B}, {:ii}, {:II}], labels: {"second"}}
+
+  """
+
+  def select(_ds = %Dataset{rows: rows, labels: labels}, out_labels) do
+    columns =
+      for l <- out_labels do
+        {:left, label_index(labels, l)}
+      end
+
+    for row <- rows do
+      {row, {}}
+    end
+    |> Relate.select(columns)
+    |> Dataset.new(List.to_tuple(out_labels))
+  end
+
+  defp perform_join(
+         join_func,
+         %Dataset{rows: rows1, labels: labels1},
+         %Dataset{rows: rows2, labels: labels2},
+         k1,
+         k2,
+         out_labels
+       ) do
+    kf1 = key_func(labels1, k1)
+    kf2 = key_func(labels2, k2 || k1)
+
+    select_columns =
+      Enum.map(out_labels, fn
+        {:left, label} -> {:left, label_index(labels1, label)}
+        {:right, label} -> {:right, label_index(labels2, label)}
+      end)
+
+    new_labels =
+      Enum.map(out_labels, fn {_, label} -> label end)
+      |> List.to_tuple()
+
+    join_func.(rows1, rows2, kf1, kf2)
+    |> Relate.select(select_columns)
+    |> Dataset.new(new_labels)
+  end
+
+  defp key_func(labels, k) do
+    i = label_index(labels, k)
+    fn t -> elem(t, i) end
+  end
+
+  defp label_index(labels, k),
+    do: labels |> Tuple.to_list() |> Enum.find_index(&(&1 == k))
 end
 
 defimpl Enumerable, for: Dataset do
