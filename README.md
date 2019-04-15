@@ -2,6 +2,10 @@
 
 Dataset provides a simple abstraction for managing tabular sets of data.
 
+Datasets are enumerable and collectable. They can also be
+rotated. Eventually they will be queryable via
+[Relate](https://github.com/edw/elixir-relate).
+
 ## Installation
 
 Dataset can be installed by adding `dataset` to your list of
@@ -10,7 +14,7 @@ dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:dataset, "~> 0.2.0"}
+    {:dataset, "~> 0.3.0"}
   ]
 end
 ```
