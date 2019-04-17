@@ -85,7 +85,8 @@ defmodule Dataset do
 
   @doc """
 
-  Return the contents of `_ds` as a list of maps.
+  Return the contents of `ds` as a list of maps. More efficient than
+  mapping `row_to_map/2` over the `:rows` element of `ds`.
 
   """
 
@@ -104,7 +105,7 @@ defmodule Dataset do
   @doc """
 
   Return the elements in `row` tuple as a map with keys matching the
-  labels of `_ds`.
+  labels of `ds`.
 
   """
 
