@@ -70,8 +70,11 @@ defmodule Dataset do
   defp default_labels([]), do: {}
 
   defp default_labels([h | _t]) do
-    0..(tuple_size(h) - 1) |> Enum.to_list() |> List.to_tuple()
+    exc_range(tuple_size(h)) |> Enum.to_list() |> List.to_tuple()
   end
+
+  def exc_range(base \\ 0, count),
+    do: Stream.drop((base - 1)..(base + count - 1), 1)
 
   @doc """
 
@@ -80,14 +83,30 @@ defmodule Dataset do
   """
 
   def to_map_list(_ds = %Dataset{rows: rows, labels: labels}) do
+    l_list = Tuple.to_list(labels)
+
     for row <- rows do
-      Map.new(tuple_zip(labels, row))
+      for k <- l_list,
+          v <- Tuple.to_list(row),
+          into: %{} do
+        {k, v}
+      end
     end
   end
 
-  defp tuple_zip(t1, t2) do
-    for i <- 0..(tuple_size(t1) - 1) do
-      {elem(t1, i), elem(t2, i)}
+  @doc """
+
+  Return the elements in `row` tuple as a map with keys matching the
+  labels of `_ds`.
+
+  """
+
+  def row_to_map(row, _ds = %Dataset{labels: labels})
+      when is_tuple(row) do
+    for k <- Tuple.to_list(labels),
+        v <- Tuple.to_list(row),
+        into: %{} do
+      {k, v}
     end
   end
 
@@ -404,6 +423,7 @@ defmodule Dataset do
   """
 
   def columns(_ds = %Dataset{}, []), do: {}
+
   def columns(ds = %Dataset{}, column_labels)
       when is_list(column_labels) do
     rotated = Enum.to_list(Dataset.rotate(ds)) |> List.to_tuple()
@@ -415,7 +435,8 @@ defmodule Dataset do
 
     for c <- column_set do
       Tuple.to_list(elem(rotated, c))
-    end |> List.to_tuple()
+    end
+    |> List.to_tuple()
   end
 
   defp perform_join(
