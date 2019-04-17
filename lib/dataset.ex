@@ -73,7 +73,14 @@ defmodule Dataset do
     exc_range(tuple_size(h)) |> Enum.to_list() |> List.to_tuple()
   end
 
-  def exc_range(base \\ 0, count),
+  @doc """
+
+  Return a stream containing `count` integer elements beginning at
+  `base`.
+
+  """
+
+  defp exc_range(base \\ 0, count),
     do: Stream.drop((base - 1)..(base + count - 1), 1)
 
   @doc """
